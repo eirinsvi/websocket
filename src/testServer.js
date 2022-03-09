@@ -9,9 +9,6 @@ var clients = [];
 
 const fileHTML = 'chat.html';
 
-/**
- * Reads index.html file and writes it to client
- */
 const httpServer = net.createServer((connection) => {
     connection.on('data', () => {
         try{
@@ -123,12 +120,6 @@ function createAcceptKey(clientKey){
     return acceptKey;
 }
 
-/**
- *
- * @param {*} text that is being converted
- * @returns a buffer with bytes
- */
-
 function createMessage(text){
     // Byte length
     let textByteLength = Buffer.from(text).length;
@@ -147,19 +138,11 @@ function createMessage(text){
         buffer1.writeUInt16BE(textByteLength,2);
     }
     else {
-        // should be : if(textByteLenth > 125 && textByteLength < max(64-bit integer))
-        // secondByte = (1 << 7) | 127;
-        // buffer1 = Buffer.alloc(10);
-        // buffer1.writeUInt8(0b10000001,0)
-        // buffer1.writeUInt8(secondByte,1);
-        // Doesnt work...
-        // buffer1.writeBigUInt64BE(textByteLength,2);
         throw Error("Message was too long");
     }
 
     const buffer2 = Buffer.from(text);
 
-    // Concatenates all buffers into one
     const buffer = Buffer.concat([buffer1,buffer2]);
     return buffer;
 
@@ -172,27 +155,20 @@ function createMessage(text){
  */
 
 function parseData(data){
-    // Checks if the first bit in the second byte is a 1 or 0. Masked or not.
     let masked = data[1]>>7 === 1;
     let length, maskStart;
 
-    // If byte length is less than 126 the data length is equal to the 7 least significant
-    // bits of the second byte.
     length = data[1] & 0b1111111;
 
-    // Two first bits are used for meta data.
     maskStart = 2;
 
     if(length === 126){
-        // Creates a 16 bit number from two bytes
         length = ((data[2] << 8)| data[3]);
 
-        // Two more bits are being used
         maskStart = 4;
     }
     else if(length === 127){
         length = data[2];
-        // Creates a 64 bit number from 8 bytes.
         for(let i = 3; i<10;i++){
             length = (length << 8)|data[i];
         }
@@ -201,29 +177,19 @@ function parseData(data){
     }
     let result = "";
     if(masked){
-        // Four bytes used for masking
         let dataStart = maskStart + 4;
         for(let i = dataStart; i< dataStart+length; i++){
-            // XORs the payload with the mask bytes going circularly.
             let byte = data[i] ^ data[maskStart + ((i - dataStart) % 4)]
             result += String.fromCharCode(byte);
         }
     }else{
-        // No mask bytes, and no masking.
         for(let i = maskStart; i<maskStart+length; i++){
             result += String.fromCharCode(data[i]);
         }
     }
 
     return result;
-
 }
-
-/**
- * Checks that alle necessary headerfields was sent by client
- * @param headers from HTTP-GET request
- * @returns boolean
- */
 
 function checkHeaderFields(headers){
     let connectionReg = /Connection:.+Upgrade.*?\s/i
