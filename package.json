@@ -1,0 +1,11 @@
+{
+  "name": "webserver",
+  "version": "1.0.0",
+  "dependencies": {
+    "websocket": "^1.0.33",
+    "ws": "^7.4.4"
+  },
+  "devDependencies": {
+    "node-static": "^0.7.11"
+  }
+}
