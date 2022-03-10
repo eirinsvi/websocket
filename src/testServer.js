@@ -77,15 +77,13 @@ const wsServer = net.createServer((connection) => {
             }
             else response = message;
 
-            // Creates the answer with protocol
             let buf = createMessage(response);
-            // Writes message to all open clients
+
             for(socket of clients){
                 if(socket) socket.write(buf);
             }
         }
     });
-    // Removes clients from array when they close connection
     connection.on('end', () => {
         for(let i = 0; i < clients.length; i++){
             if(clients[i] === connection){
@@ -108,12 +106,6 @@ wsServer.listen(WSPORT, () => {
     console.log('Websocket server listening on port: ', WSPORT);
 })
 
-/**
- *
- * @param clientKey
- * @returns acceptKey
- */
-
 function createAcceptKey(clientKey){
     acceptKey = clientKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     acceptKey = crypto.createHash("sha1").update(acceptKey,"binary").digest("base64");
@@ -121,10 +113,8 @@ function createAcceptKey(clientKey){
 }
 
 function createMessage(text){
-    // Byte length
     let textByteLength = Buffer.from(text).length;
 
-    // datalength bits into a single byte
     let secondByte, buffer1;
     if(textByteLength < 126){
         secondByte = textByteLength;
@@ -148,11 +138,6 @@ function createMessage(text){
 
 }
 
-/**
- * Parses masked data from client
- * @param data masked
- * @returns parsed data in a string
- */
 
 function parseData(data){
     let masked = data[1]>>7 === 1;
